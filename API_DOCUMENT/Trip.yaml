@@ -1,1 +1,264 @@
+estimate:
+  post:
+    tags:
+      - Trips
 
+    summary: Estimate trip distance, duration and fare
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/trip.yaml#/CreateTripRequest'
+
+    responses:
+
+      '200':
+        description: Estimated trip information
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/trip.yaml#/FareEstimate'
+
+      '400':
+        description: Invalid request
+
+
+trips:
+  post:
+    tags:
+      - Trips
+
+    summary: Create ride booking request
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/trip.yaml#/CreateTripRequest'
+
+    responses:
+
+      '201':
+        description: Trip created and driver search started
+
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/trip.yaml#/Trip'
+
+      '400':
+        description: Invalid trip information
+
+
+  get:
+    tags:
+      - Trips
+
+    summary: List current user's trips
+
+    security:
+      - bearerAuth: []
+
+    responses:
+
+      '200':
+        description: Trip list
+
+
+trip:
+  get:
+    tags:
+      - Trips
+
+    summary: Get trip details and current status
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+
+      - name: tripId
+        in: path
+        required: true
+
+        schema:
+          type: string
+
+    responses:
+
+      '200':
+        description: Trip details
+
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/trip.yaml#/Trip'
+
+      '404':
+        description: Trip not found
+
+
+status:
+  patch:
+    tags:
+      - Trips
+
+    summary: Update trip status
+
+    description: Driver updates trip status in sequence.
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+
+      - name: tripId
+        in: path
+        required: true
+
+        schema:
+          type: string
+
+    requestBody:
+      required: true
+
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/trip.yaml#/TripStatusRequest'
+
+    responses:
+
+      '200':
+        description: Status updated
+
+      '400':
+        description: Invalid status transition
+
+
+cancel:
+  post:
+    tags:
+      - Trips
+
+    summary: Cancel trip
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+
+      - name: tripId
+        in: path
+        required: true
+
+        schema:
+          type: string
+
+    requestBody:
+      required: false
+
+      content:
+        application/json:
+          schema:
+            type: object
+
+            properties:
+              reason:
+                type: string
+                example: Customer changed plan
+
+    responses:
+
+      '200':
+        description: Trip cancelled
+
+      '400':
+        description: Cancellation not allowed
+
+
+driver:
+  get:
+    tags:
+      - Trips
+
+    summary: Get assigned driver
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+
+      - name: tripId
+        in: path
+        required: true
+
+        schema:
+          type: string
+
+    responses:
+
+      '200':
+        description: Driver information
+
+      '404':
+        description: Driver not assigned
+
+
+eta:
+  get:
+    tags:
+      - Trips
+
+    summary: Get driver ETA
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+
+      - name: tripId
+        in: path
+        required: true
+
+        schema:
+          type: string
+
+    responses:
+
+      '200':
+        description: Estimated arrival time
+
+
+driverLocation:
+  get:
+    tags:
+      - Trips
+
+    summary: Get current driver location
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+
+      - name: tripId
+        in: path
+        required: true
+
+        schema:
+          type: string
+
+    responses:
+
+      '200':
+        description: Driver location
