@@ -1,0 +1,104 @@
+CreateTripRequest:
+
+  type: object
+
+  required:
+    - pickup
+    - destination
+    - serviceType
+
+  properties:
+
+    pickup:
+      $ref: './common.yaml#/Location'
+
+    destination:
+      $ref: './common.yaml#/Location'
+
+    serviceType:
+      type: string
+      example: CAR_4
+
+
+FareEstimate:
+
+  type: object
+
+  properties:
+
+    distanceKm:
+      type: number
+      format: double
+      example: 8.5
+
+    durationMinutes:
+      type: integer
+      example: 25
+
+    estimatedFare:
+      type: number
+      format: double
+      example: 120000
+
+
+TripStatusRequest:
+
+  type: object
+
+  required:
+    - status
+
+  properties:
+
+    status:
+      type: string
+
+      enum:
+        - DRIVER_ARRIVED
+        - PASSENGER_PICKED_UP
+        - IN_PROGRESS
+        - COMPLETED
+        - CANCELLED
+
+
+Trip:
+
+  type: object
+
+  properties:
+
+    tripId:
+      type: string
+      example: TRIP001
+
+    customerId:
+      type: string
+      example: CUS001
+
+    driverId:
+      type: string
+      nullable: true
+      example: DRI001
+
+    serviceType:
+      type: string
+      example: CAR_4
+
+    pickup:
+      $ref: './common.yaml#/Location'
+
+    destination:
+      $ref: './common.yaml#/Location'
+
+    status:
+      type: string
+
+      enum:
+        - SEARCHING_DRIVER
+        - DRIVER_ASSIGNED
+        - DRIVER_ARRIVED
+        - PASSENGER_PICKED_UP
+        - IN_PROGRESS
+        - COMPLETED
+        - CANCELLED
+        - NO_DRIVER_FOUND
