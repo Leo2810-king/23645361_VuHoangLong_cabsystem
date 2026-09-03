@@ -1,0 +1,119 @@
+register:
+
+  post:
+
+    tags:
+      - Authentication
+
+    summary: Register customer
+
+    operationId: registerCustomer
+
+    requestBody:
+      required: true
+
+      content:
+        application/json:
+
+          schema:
+            $ref: '../schemas/auth.yaml#/RegisterRequest'
+
+    responses:
+
+      '201':
+        description: Register successfully
+
+      '400':
+        description: Invalid request
+
+
+login:
+
+  post:
+
+    tags:
+      - Authentication
+
+    summary: Login
+
+    operationId: login
+
+    requestBody:
+      required: true
+
+      content:
+        application/json:
+
+          schema:
+            $ref: '../schemas/auth.yaml#/LoginRequest'
+
+    responses:
+
+      '200':
+        description: Login successfully
+
+        content:
+          application/json:
+
+            example:
+              accessToken: eyJhbGciOi...
+              role: CUSTOMER
+
+      '401':
+        description: Invalid credentials
+
+
+logout:
+
+  post:
+
+    tags:
+      - Authentication
+
+    summary: Logout
+
+    security:
+      - bearerAuth: []
+
+    responses:
+
+      '204':
+        description: Logout successfully
+
+
+verify:
+
+  post:
+
+    tags:
+      - Authentication
+
+    summary: Verify account
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+
+      content:
+        application/json:
+
+          schema:
+            type: object
+
+            required:
+              - otp
+
+            properties:
+              otp:
+                type: string
+                example: "123456"
+
+    responses:
+
+      '200':
+        description: Account verified
+
+      '400':
+        description: Invalid OTP
