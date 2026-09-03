@@ -1,1 +1,1164 @@
+openapi: 3.0.3
 
+info:
+  title: CAB System API
+  description: API for CAB System - Online Ride Booking Platform
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local development server
+
+tags:
+  - name: Authentication
+  - name: Customers
+  - name: Trips
+  - name: Matching
+  - name: Drivers
+  - name: Vehicles
+  - name: Payments
+  - name: Notifications
+  - name: Admin
+  - name: Reports
+  - name: Services
+  - name: Audit
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    RegisterRequest:
+      type: object
+      required: [name, phone, password]
+      properties:
+        name:
+          type: string
+          example: Nguyen Van A
+        phone:
+          type: string
+          example: "0901234567"
+        email:
+          type: string
+          format: email
+          example: a@example.com
+        password:
+          type: string
+          format: password
+          example: Password123!
+
+    LoginRequest:
+      type: object
+      required: [phone, password]
+      properties:
+        phone:
+          type: string
+          example: "0901234567"
+        password:
+          type: string
+          format: password
+          example: Password123!
+
+    Location:
+      type: object
+      required: [latitude, longitude]
+      properties:
+        latitude:
+          type: number
+          format: double
+          example: 10.7769
+        longitude:
+          type: number
+          format: double
+          example: 106.7009
+        address:
+          type: string
+          example: 1 Le Loi, District 1, HCMC
+
+    CreateTripRequest:
+      type: object
+      required: [pickup, destination, serviceType]
+      properties:
+        pickup:
+          $ref: '#/components/schemas/Location'
+        destination:
+          $ref: '#/components/schemas/Location'
+        serviceType:
+          type: string
+          example: CAR_4
+
+    FareEstimate:
+      type: object
+      properties:
+        distanceKm:
+          type: number
+          format: double
+          example: 8.5
+        durationMinutes:
+          type: integer
+          example: 25
+        estimatedFare:
+          type: number
+          format: double
+          example: 120000
+
+    TripStatusRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum:
+            - DRIVER_ARRIVED
+            - PASSENGER_PICKED_UP
+            - IN_PROGRESS
+            - COMPLETED
+            - CANCELLED
+
+    Trip:
+      type: object
+      properties:
+        tripId:
+          type: string
+          example: TRIP001
+        customerId:
+          type: string
+          example: CUS001
+        driverId:
+          type: string
+          nullable: true
+          example: DRI001
+        serviceType:
+          type: string
+          example: CAR_4
+        pickup:
+          $ref: '#/components/schemas/Location'
+        destination:
+          $ref: '#/components/schemas/Location'
+        status:
+          type: string
+          enum:
+            - SEARCHING_DRIVER
+            - DRIVER_ASSIGNED
+            - DRIVER_ARRIVED
+            - PASSENGER_PICKED_UP
+            - IN_PROGRESS
+            - COMPLETED
+            - CANCELLED
+            - NO_DRIVER_FOUND
+
+    DriverStatusRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ONLINE, OFFLINE]
+
+    AvailabilityRequest:
+      type: object
+      required: [available]
+      properties:
+        available:
+          type: boolean
+          example: true
+
+    DriverLocationRequest:
+      type: object
+      required: [latitude, longitude]
+      properties:
+        latitude:
+          type: number
+          format: double
+          example: 10.7769
+        longitude:
+          type: number
+          format: double
+          example: 106.7009
+
+    PaymentRequest:
+      type: object
+      required: [tripId, method]
+      properties:
+        tripId:
+          type: string
+          example: TRIP001
+        method:
+          type: string
+          enum: [CASH, CARD, E_WALLET]
+        providerToken:
+          type: string
+          description: Token from external payment provider. Do not store raw card/account credentials.
+
+    Payment:
+      type: object
+      properties:
+        paymentId:
+          type: string
+          example: PAY001
+        tripId:
+          type: string
+          example: TRIP001
+        amount:
+          type: number
+          format: double
+          example: 120000
+        method:
+          type: string
+          example: E_WALLET
+        status:
+          type: string
+          enum: [PENDING, SUCCESS, FAILED]
+
+    Service:
+      type: object
+      properties:
+        serviceId:
+          type: string
+          example: SV001
+        code:
+          type: string
+          example: CAR_4
+        name:
+          type: string
+          example: Car 4 seats
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE]
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          example: INVALID_REQUEST
+        message:
+          type: string
+          example: Invalid request
+
+paths:
+
+  /auth/register:
+    post:
+      tags: [Authentication]
+      summary: Register customer
+      operationId: registerCustomer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Register successfully
+        '400':
+          description: Invalid request
+
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: Login
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successfully
+          content:
+            application/json:
+              example:
+                accessToken: eyJhbGciOi...
+                role: CUSTOMER
+        '401':
+          description: Invalid credentials
+
+  /auth/logout:
+    post:
+      tags: [Authentication]
+      summary: Logout
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Logout successfully
+
+  /auth/verify:
+    post:
+      tags: [Authentication]
+      summary: Verify account
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [otp]
+              properties:
+                otp:
+                  type: string
+                  example: "123456"
+      responses:
+        '200':
+          description: Account verified
+        '400':
+          description: Invalid OTP
+
+  /customers/me:
+    get:
+      tags: [Customers]
+      summary: Get current customer profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Customer profile
+    put:
+      tags: [Customers]
+      summary: Update customer profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              name: Nguyen Van B
+              email: b@example.com
+      responses:
+        '200':
+          description: Profile updated
+
+  /customers/me/location:
+    get:
+      tags: [Customers]
+      summary: Get current customer location
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current location
+
+  /customers/me/trips:
+    get:
+      tags: [Customers]
+      summary: Get customer trip history
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Trip history
+
+  /trips/estimate:
+    post:
+      tags: [Trips]
+      summary: Estimate trip distance, duration and fare
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTripRequest'
+      responses:
+        '200':
+          description: Estimated trip information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FareEstimate'
+
+  /trips:
+    post:
+      tags: [Trips]
+      summary: Create ride booking request
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTripRequest'
+      responses:
+        '201':
+          description: Trip created and driver search started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trip'
+        '400':
+          description: Invalid trip information
+
+    get:
+      tags: [Trips]
+      summary: List current user's trips
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Trip list
+
+  /trips/{tripId}:
+    get:
+      tags: [Trips]
+      summary: Get trip details and current status
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Trip details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trip'
+        '404':
+          description: Trip not found
+
+  /trips/{tripId}/status:
+    patch:
+      tags: [Trips]
+      summary: Update trip status
+      description: Driver updates trip status in sequence.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TripStatusRequest'
+      responses:
+        '200':
+          description: Status updated
+        '400':
+          description: Invalid status transition
+
+  /trips/{tripId}/cancel:
+    post:
+      tags: [Trips]
+      summary: Cancel trip
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            example:
+              reason: Customer changed plan
+      responses:
+        '200':
+          description: Trip cancelled
+        '400':
+          description: Cancellation not allowed
+
+  /trips/{tripId}/driver:
+    get:
+      tags: [Trips]
+      summary: Get assigned driver
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Driver information
+        '404':
+          description: Driver not assigned
+
+  /trips/{tripId}/eta:
+    get:
+      tags: [Trips]
+      summary: Get driver ETA
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Estimated arrival time
+
+  /trips/{tripId}/driver-location:
+    get:
+      tags: [Trips]
+      summary: Get current driver location
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Driver location
+
+  /drivers:
+    post:
+      tags: [Drivers]
+      summary: Create driver account
+      description: Driver registration or operator-created account.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              name: Tran Van B
+              phone: "0912345678"
+              email: driver@example.com
+      responses:
+        '201':
+          description: Driver created
+
+  /drivers/me:
+    get:
+      tags: [Drivers]
+      summary: Get driver profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Driver profile
+    put:
+      tags: [Drivers]
+      summary: Update driver profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              name: Tran Van B
+              phone: "0912345678"
+      responses:
+        '200':
+          description: Driver profile updated
+
+  /drivers/me/status:
+    patch:
+      tags: [Drivers]
+      summary: Set driver online or offline
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DriverStatusRequest'
+      responses:
+        '200':
+          description: Driver status updated
+
+  /drivers/me/availability:
+    patch:
+      tags: [Drivers]
+      summary: Set driver availability
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AvailabilityRequest'
+      responses:
+        '200':
+          description: Driver availability updated
+
+  /drivers/me/location:
+    post:
+      tags: [Drivers]
+      summary: Update driver location
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DriverLocationRequest'
+      responses:
+        '200':
+          description: Location updated
+
+  /drivers/available:
+    get:
+      tags: [Drivers]
+      summary: Find available drivers
+      description: Returns online and available drivers matching the requested service type and area.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: serviceType
+          in: query
+          required: false
+          schema:
+            type: string
+            example: CAR_4
+        - name: latitude
+          in: query
+          required: false
+          schema:
+            type: number
+            format: double
+        - name: longitude
+          in: query
+          required: false
+          schema:
+            type: number
+            format: double
+        - name: radiusKm
+          in: query
+          required: false
+          schema:
+            type: number
+            format: double
+            default: 5
+      responses:
+        '200':
+          description: Available drivers
+
+  /drivers/{driverId}:
+    get:
+      tags: [Drivers]
+      summary: Get driver information
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: driverId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Driver information
+
+  /drivers/me/vehicles:
+    get:
+      tags: [Vehicles]
+      summary: Get driver's vehicles
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Vehicle list
+    post:
+      tags: [Vehicles]
+      summary: Add driver vehicle
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              plateNumber: 51A-12345
+              type: CAR_4
+              brand: Toyota
+              model: Vios
+      responses:
+        '201':
+          description: Vehicle created
+
+  /drivers/me/vehicles/{vehicleId}:
+    put:
+      tags: [Vehicles]
+      summary: Update vehicle information
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: vehicleId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              plateNumber: 51A-12345
+              type: CAR_4
+      responses:
+        '200':
+          description: Vehicle updated
+
+  /matching/{tripId}/request:
+    post:
+      tags: [Matching]
+      summary: Start or continue driver matching
+      description: |
+        System selects suitable drivers based on availability, service type,
+        distance and operational criteria. If a driver rejects or does not
+        respond within the configured timeout, the system continues matching.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Driver matching started
+        '404':
+          description: No suitable driver found
+
+  /trips/{tripId}/accept:
+    post:
+      tags: [Matching]
+      summary: Driver accepts trip
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Trip accepted
+        '409':
+          description: Trip no longer available
+
+  /trips/{tripId}/reject:
+    post:
+      tags: [Matching]
+      summary: Driver rejects trip
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            example:
+              reason: Too far
+      responses:
+        '200':
+          description: Trip rejected and matching continues
+
+  /payments/calculate-fare:
+    post:
+      tags: [Payments]
+      summary: Calculate final fare
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              tripId: TRIP001
+      responses:
+        '200':
+          description: Fare calculated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FareEstimate'
+
+  /payments:
+    post:
+      tags: [Payments]
+      summary: Create electronic payment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+      responses:
+        '201':
+          description: Payment created
+        '400':
+          description: Payment failed
+
+  /payments/cash:
+    post:
+      tags: [Payments]
+      summary: Record cash payment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              tripId: TRIP001
+              amount: 120000
+      responses:
+        '201':
+          description: Cash payment recorded
+
+  /payments/{paymentId}:
+    get:
+      tags: [Payments]
+      summary: Get payment result
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: paymentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Payment information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+
+  /payments/{paymentId}/retry:
+    post:
+      tags: [Payments]
+      summary: Retry failed payment
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: paymentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Payment retry started
+        '409':
+          description: Retry not allowed by policy
+
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: Get user notifications
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Notification list
+    post:
+      tags: [Notifications]
+      summary: Create/send notification
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              userId: CUS001
+              type: DRIVER_ASSIGNED
+              message: Driver Nguyen Van B has accepted your trip.
+              channel: PUSH
+      responses:
+        '201':
+          description: Notification created
+
+  /admin/customers:
+    get:
+      tags: [Admin]
+      summary: List customers
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Customer list
+        '403':
+          description: Forbidden
+
+  /admin/drivers:
+    get:
+      tags: [Admin]
+      summary: Manage drivers
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Driver list
+        '403':
+          description: Forbidden
+
+  /admin/vehicles:
+    get:
+      tags: [Admin]
+      summary: Manage vehicles
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Vehicle list
+
+  /admin/trips:
+    get:
+      tags: [Admin]
+      summary: Manage and search trips
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Trip list
+
+  /admin/trips/active:
+    get:
+      tags: [Admin]
+      summary: View active trips
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Active trips
+
+  /admin/drivers/status:
+    get:
+      tags: [Admin]
+      summary: Check driver statuses
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Driver status list
+
+  /admin/trips/{tripId}/resolve:
+    post:
+      tags: [Admin]
+      summary: Resolve problematic trip
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              action: MANUAL_ASSIGN
+              note: Resolved by operator
+      responses:
+        '200':
+          description: Trip resolved
+        '403':
+          description: Forbidden
+
+  /admin/payments:
+    get:
+      tags: [Admin]
+      summary: Search payment transaction history
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Payment transaction list
+
+  /reports/trips:
+    get:
+      tags: [Reports]
+      summary: Trip count report
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: from
+          in: query
+          required: true
+          schema: {type: string, format: date}
+        - name: to
+          in: query
+          required: true
+          schema: {type: string, format: date}
+      responses:
+        '200':
+          description: Trip count report
+
+  /reports/revenue:
+    get:
+      tags: [Reports]
+      summary: Revenue report
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: from
+          in: query
+          required: true
+          schema: {type: string, format: date}
+        - name: to
+          in: query
+          required: true
+          schema: {type: string, format: date}
+      responses:
+        '200':
+          description: Revenue report
+
+  /reports/completion-rate:
+    get:
+      tags: [Reports]
+      summary: Trip completion rate report
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Completion rate report
+
+  /reports/cancellation-rate:
+    get:
+      tags: [Reports]
+      summary: Trip cancellation rate report
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Cancellation rate report
+
+  /reports/driver-performance:
+    get:
+      tags: [Reports]
+      summary: Driver performance report
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Driver performance report
+
+  /services:
+    get:
+      tags: [Services]
+      summary: List service types
+      responses:
+        '200':
+          description: Service list
+    post:
+      tags: [Services]
+      summary: Add service type
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Service'
+      responses:
+        '201':
+          description: Service created
+
+  /services/{serviceId}:
+    put:
+      tags: [Services]
+      summary: Update service type
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: serviceId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Service'
+      responses:
+        '200':
+          description: Service updated
+
+  /payment-methods:
+    get:
+      tags: [Payments]
+      summary: List payment methods
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Payment method list
+    post:
+      tags: [Payments]
+      summary: Add payment method/provider
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Payment method created
+
+  /audit-logs:
+    get:
+      tags: [Audit]
+      summary: Search important administrative audit logs
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: from
+          in: query
+          required: false
+          schema: {type: string, format: date-time}
+        - name: to
+          in: query
+          required: false
+          schema: {type: string, format: date-time}
+      responses:
+        '200':
+          description: Audit log list
+        '403':
+          description: Forbidden
