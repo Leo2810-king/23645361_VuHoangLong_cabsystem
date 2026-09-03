@@ -1,0 +1,38 @@
+Location:
+
+  type: object
+
+  required:
+    - latitude
+    - longitude
+
+  properties:
+
+    latitude:
+      type: number
+      format: double
+      example: 10.7769
+
+    longitude:
+      type: number
+      format: double
+      example: 106.7009
+
+    address:
+      type: string
+      example: 1 Le Loi, District 1, HCMC
+
+
+Error:
+
+  type: object
+
+  properties:
+
+    code:
+      type: string
+      example: INVALID_REQUEST
+
+    message:
+      type: string
+      example: Invalid request
