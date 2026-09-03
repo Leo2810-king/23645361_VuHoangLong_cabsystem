@@ -1,0 +1,1945 @@
+openapi: 3.0.3
+
+info:
+  title: CAB Booking API
+  version: 1.0.0
+  description: |
+    Đặc tả API cho hệ thống đặt xe CAB.
+
+    Phạm vi nghiệp vụ:
+    - BR01: Quản lý tài khoản khách hàng
+    - BR02: Đặt xe
+    - BR03: Tìm và phân công tài xế
+    - BR04: Theo dõi chuyến đi
+    - BR05: Quản lý thanh toán và tính cước
+    - BR06: Thông báo
+    - BR07: Quản lý tài xế và phương tiện
+    - BR08: Quản lý vận hành
+    - BR09: Phân quyền và bảo mật
+    - BR10: Báo cáo
+    - BR11: Khả năng mở rộng
+
+    Thiết kế này dùng JWT Bearer Authentication và RBAC.
+    Đây là API specification; để nút "Try it out" gọi được API thật cần có backend
+    triển khai tại server URL tương ứng.
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local Backend
+
+tags:
+  - name: Authentication
+    description: BR01 - Tài khoản khách hàng
+  - name: Customers
+    description: BR01 - Thông tin khách hàng
+  - name: Rides
+    description: BR02/BR04 - Đặt và theo dõi chuyến đi
+  - name: Driver Matching
+    description: BR03 - Tìm và phân công tài xế
+  - name: Drivers
+    description: BR07 - Tài xế
+  - name: Vehicles
+    description: BR07 - Phương tiện
+  - name: Payments
+    description: BR05 - Tính cước và thanh toán
+  - name: Notifications
+    description: BR06 - Thông báo
+  - name: Administration
+    description: BR08/BR09 - Quản lý vận hành và phân quyền
+  - name: Audit
+    description: BR09 - Audit log
+  - name: Reports
+    description: BR10 - Báo cáo
+
+paths:
+
+  /auth/register:
+    post:
+      tags: [Authentication]
+      summary: Đăng ký tài khoản khách hàng
+      description: |
+        Đáp ứng BR01, FR01, AC01.
+        Tạo tài khoản khách hàng mới. Không yêu cầu đăng nhập trước.
+      operationId: registerCustomer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Đăng ký thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Số điện thoại hoặc email đã tồn tại
+
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: Đăng nhập
+      description: Đáp ứng BR01, FR02, FR04, FR56 và AC01, AC14.
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Đăng nhập thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Thông tin đăng nhập không hợp lệ
+
+  /auth/logout:
+    post:
+      tags: [Authentication]
+      summary: Đăng xuất
+      description: Đáp ứng BR01, FR02.
+      operationId: logout
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Đăng xuất thành công
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /customers/me:
+    get:
+      tags: [Customers]
+      summary: Xem thông tin cá nhân
+      description: Đáp ứng BR01, FR03, AC01.
+      operationId: getMyProfile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Thông tin khách hàng
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    patch:
+      tags: [Customers]
+      summary: Cập nhật thông tin cá nhân
+      description: Đáp ứng BR01, FR03, AC01.
+      operationId: updateMyProfile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCustomerRequest'
+      responses:
+        '200':
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /rides/estimate:
+    post:
+      tags: [Rides]
+      summary: Tính thông tin chuyến đi dự kiến
+      description: |
+        Đáp ứng BR02, FR05-FR09, AC02.
+        API này chỉ ước tính, chưa tạo yêu cầu đặt xe.
+      operationId: estimateRide
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RideRequest'
+      responses:
+        '200':
+          description: Thông tin chuyến đi dự kiến
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RideEstimate'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /rides:
+    post:
+      tags: [Rides]
+      summary: Tạo yêu cầu đặt xe
+      description: |
+        Đáp ứng BR02, FR05-FR10, AC02.
+        Khách hàng phải cung cấp điểm đón, điểm đến và loại xe/dịch vụ.
+      operationId: createRide
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RideRequest'
+      responses:
+        '201':
+          description: Tạo yêu cầu đặt xe thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ride'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /rides/{rideId}:
+    get:
+      tags: [Rides]
+      summary: Xem chi tiết và trạng thái chuyến đi
+      description: Đáp ứng BR04, FR20-FR23, AC06.
+      operationId: getRide
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RideId'
+      responses:
+        '200':
+          description: Chi tiết chuyến đi
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ride'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /rides/{rideId}/cancel:
+    post:
+      tags: [Rides]
+      summary: Hủy chuyến
+      description: Hỗ trợ nghiệp vụ chuyến đi và tỷ lệ hủy của BR10. Quy tắc hủy cụ thể do chính sách hệ thống quy định.
+      operationId: cancelRide
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RideId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelRideRequest'
+      responses:
+        '200':
+          description: Hủy chuyến thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ride'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /rides/{rideId}/matching:
+    post:
+      tags: [Driver Matching]
+      summary: Bắt đầu hoặc tiếp tục tìm tài xế
+      description: |
+        Đáp ứng BR03, FR11-FR16, AC03.
+        Hệ thống lọc tài xế online/available, loại xe phù hợp và ưu tiên tài xế gần khách hàng.
+      operationId: startDriverMatching
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RideId'
+      responses:
+        '200':
+          description: Kết quả tìm tài xế hiện tại
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchingStatus'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /rides/{rideId}/matching/status:
+    get:
+      tags: [Driver Matching]
+      summary: Xem trạng thái tìm tài xế
+      description: |
+        Đáp ứng BR03, FR18-FR19, AC04-AC05.
+        Nếu tài xế Reject hoặc không phản hồi trong thời hạn, hệ thống tiếp tục tìm tài xế khác.
+      operationId: getMatchingStatus
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RideId'
+      responses:
+        '200':
+          description: Trạng thái matching
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchingStatus'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /rides/{rideId}/accept:
+    post:
+      tags: [Driver Matching]
+      summary: Tài xế chấp nhận chuyến
+      description: Đáp ứng BR03, FR17, AC03.
+      operationId: acceptRide
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RideId'
+      responses:
+        '200':
+          description: Tài xế nhận chuyến thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ride'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: Chuyến đã được tài xế khác nhận hoặc không còn khả dụng
+
+  /rides/{rideId}/reject:
+    post:
+      tags: [Driver Matching]
+      summary: Tài xế từ chối chuyến
+      description: Đáp ứng BR03, FR17-FR18, AC04. Sau khi Reject, hệ thống tự động chuyển sang tài xế tiếp theo.
+      operationId: rejectRide
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RideId'
+      responses:
+        '200':
+          description: Từ chối thành công và hệ thống tiếp tục matching
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchingStatus'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /rides/{rideId}/status:
+    patch:
+      tags: [Rides]
+      summary: Cập nhật trạng thái chuyến đi
+      description: |
+        Đáp ứng BR04, FR24-FR27, AC07.
+        Luồng trạng thái hợp lệ:
+        ARRIVED -> PICKED_UP -> IN_PROGRESS -> COMPLETED.
+      operationId: updateRideStatus
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RideId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRideStatusRequest'
+      responses:
+        '200':
+          description: Cập nhật trạng thái thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ride'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: Chuyển trạng thái không hợp lệ
+
+  /rides/{rideId}/location:
+    patch:
+      tags: [Rides]
+      summary: Cập nhật vị trí tài xế trong chuyến
+      description: Đáp ứng BR04, FR23, AC06.
+      operationId: updateRideLocation
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RideId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Location'
+      responses:
+        '200':
+          description: Cập nhật vị trí thành công
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /rides/{rideId}/fare:
+    get:
+      tags: [Payments]
+      summary: Tính và xem cước chuyến đi
+      description: Đáp ứng BR05, FR28, AC08.
+      operationId: getRideFare
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RideId'
+      responses:
+        '200':
+          description: Chi tiết cước
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Fare'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /payments:
+    post:
+      tags: [Payments]
+      summary: Tạo giao dịch thanh toán
+      description: |
+        Đáp ứng BR05, FR29-FR33, AC09.
+        Hỗ trợ CASH và phương thức điện tử.
+        Không nhận hoặc lưu số thẻ/CVV trong CAB; thanh toán điện tử nên dùng token/reference
+        do nhà cung cấp thanh toán cấp.
+      operationId: createPayment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePaymentRequest'
+      responses:
+        '201':
+          description: Giao dịch được ghi nhận
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /payments/{paymentId}:
+    get:
+      tags: [Payments]
+      summary: Xem kết quả thanh toán
+      description: Đáp ứng BR05, FR33-FR34, AC09-AC10.
+      operationId: getPayment
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PaymentId'
+      responses:
+        '200':
+          description: Chi tiết giao dịch
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /payments/{paymentId}/retry:
+    post:
+      tags: [Payments]
+      summary: Thử lại thanh toán
+      description: Đáp ứng BR05, FR34-FR35, AC10.
+      operationId: retryPayment
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PaymentId'
+      responses:
+        '200':
+          description: Đã yêu cầu thanh toán lại
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: Giao dịch không được phép retry theo chính sách
+
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: Xem thông báo
+      description: Đáp ứng BR06, FR36-FR42, AC11.
+      operationId: listNotifications
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: unreadOnly
+          in: query
+          schema:
+            type: boolean
+            default: false
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Danh sách thông báo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /notifications/{notificationId}/read:
+    patch:
+      tags: [Notifications]
+      summary: Đánh dấu thông báo đã đọc
+      description: Hỗ trợ BR06.
+      operationId: markNotificationRead
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/NotificationId'
+      responses:
+        '204':
+          description: Đã đánh dấu đã đọc
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /drivers:
+    post:
+      tags: [Drivers]
+      summary: Tạo tài khoản tài xế
+      description: Đáp ứng BR07, FR43, AC12. Có thể do tài xế đăng ký hoặc nhân viên có quyền tạo.
+      operationId: createDriver
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDriverRequest'
+      responses:
+        '201':
+          description: Tạo tài khoản tài xế thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Driver'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /drivers/me:
+    get:
+      tags: [Drivers]
+      summary: Xem hồ sơ tài xế
+      description: Đáp ứng BR07, FR44, AC12.
+      operationId: getMyDriverProfile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Hồ sơ tài xế
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Driver'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    patch:
+      tags: [Drivers]
+      summary: Cập nhật hồ sơ tài xế
+      description: Đáp ứng BR07, FR44, AC12.
+      operationId: updateMyDriverProfile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDriverRequest'
+      responses:
+        '200':
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Driver'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /drivers/me/status:
+    patch:
+      tags: [Drivers]
+      summary: Cập nhật trạng thái online/offline/available
+      description: Đáp ứng BR07, FR46-FR47, AC12.
+      operationId: updateDriverStatus
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DriverStatusRequest'
+      responses:
+        '200':
+          description: Cập nhật trạng thái thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Driver'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /drivers/me/location:
+    patch:
+      tags: [Drivers]
+      summary: Cập nhật vị trí tài xế
+      description: Đáp ứng BR07, FR48, AC12.
+      operationId: updateDriverLocation
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Location'
+      responses:
+        '200':
+          description: Cập nhật vị trí thành công
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /drivers/me/vehicle:
+    get:
+      tags: [Vehicles]
+      summary: Xem phương tiện của tài xế
+      description: Đáp ứng BR07, FR45, AC12.
+      operationId: getMyVehicle
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Phương tiện
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vehicle'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    patch:
+      tags: [Vehicles]
+      summary: Cập nhật phương tiện
+      description: Đáp ứng BR07, FR45, AC12.
+      operationId: updateMyVehicle
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateVehicleRequest'
+      responses:
+        '200':
+          description: Cập nhật phương tiện thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vehicle'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /drivers/me/rides:
+    get:
+      tags: [Drivers]
+      summary: Xem các chuyến liên quan đến tài xế
+      description: Hỗ trợ BR07 và BR04.
+      operationId: listDriverRides
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Danh sách chuyến
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RidePage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/customers:
+    get:
+      tags: [Administration]
+      summary: Xem danh sách khách hàng
+      description: Đáp ứng BR08, FR49, AC13. Chỉ STAFF/ADMIN.
+      operationId: adminListCustomers
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Danh sách khách hàng
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/drivers:
+    get:
+      tags: [Administration]
+      summary: Xem danh sách tài xế
+      description: Đáp ứng BR08, FR50, AC13.
+      operationId: adminListDrivers
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Danh sách tài xế
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/drivers/{driverId}:
+    patch:
+      tags: [Administration]
+      summary: Quản lý thông tin tài xế
+      description: Đáp ứng BR08, FR50, AC13.
+      operationId: adminUpdateDriver
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/DriverId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminUpdateDriverRequest'
+      responses:
+        '200':
+          description: Cập nhật tài xế thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Driver'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /admin/vehicles:
+    get:
+      tags: [Administration]
+      summary: Xem danh sách phương tiện
+      description: Đáp ứng BR08, FR51, AC13.
+      operationId: adminListVehicles
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Danh sách phương tiện
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehiclePage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/vehicles/{vehicleId}:
+    patch:
+      tags: [Administration]
+      summary: Quản lý phương tiện
+      description: Đáp ứng BR08, FR51, AC13.
+      operationId: adminUpdateVehicle
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminUpdateVehicleRequest'
+      responses:
+        '200':
+          description: Cập nhật phương tiện thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vehicle'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/rides:
+    get:
+      tags: [Administration]
+      summary: Xem và quản lý các chuyến đi
+      description: Đáp ứng BR08, FR52-FR54, AC13.
+      operationId: adminListRides
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/RideStatus'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Danh sách chuyến
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RidePage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/rides/{rideId}/support:
+    post:
+      tags: [Administration]
+      summary: Hỗ trợ xử lý chuyến bị lỗi
+      description: Đáp ứng BR08, FR54, AC13.
+      operationId: supportRide
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RideId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SupportRideRequest'
+      responses:
+        '200':
+          description: Đã ghi nhận xử lý hỗ trợ
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/payments:
+    get:
+      tags: [Administration]
+      summary: Tra cứu lịch sử giao dịch
+      description: Đáp ứng BR08, FR55, AC13.
+      operationId: adminListPayments
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lịch sử giao dịch
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/audit-logs:
+    get:
+      tags: [Audit]
+      summary: Tra cứu audit log
+      description: Đáp ứng BR09, FR60, AC15.
+      operationId: listAuditLogs
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: actorId
+          in: query
+          schema:
+            type: string
+        - name: action
+          in: query
+          schema:
+            type: string
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Danh sách audit log
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditLogPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /reports/rides:
+    get:
+      tags: [Reports]
+      summary: Báo cáo số lượng chuyến đi
+      description: Đáp ứng BR10, FR61, AC16.
+      operationId: reportRides
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ReportFrom'
+        - $ref: '#/components/parameters/ReportTo'
+      responses:
+        '200':
+          description: Báo cáo chuyến đi
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RideReport'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /reports/revenue:
+    get:
+      tags: [Reports]
+      summary: Báo cáo doanh thu
+      description: Đáp ứng BR10, FR62, AC16.
+      operationId: reportRevenue
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ReportFrom'
+        - $ref: '#/components/parameters/ReportTo'
+      responses:
+        '200':
+          description: Báo cáo doanh thu
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevenueReport'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /reports/completion-rate:
+    get:
+      tags: [Reports]
+      summary: Báo cáo tỷ lệ chuyến hoàn thành
+      description: Đáp ứng BR10, FR63, AC16.
+      operationId: reportCompletionRate
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ReportFrom'
+        - $ref: '#/components/parameters/ReportTo'
+      responses:
+        '200':
+          description: Tỷ lệ hoàn thành
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateReport'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /reports/cancellation-rate:
+    get:
+      tags: [Reports]
+      summary: Báo cáo tỷ lệ chuyến bị hủy
+      description: Đáp ứng BR10, FR64, AC16.
+      operationId: reportCancellationRate
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ReportFrom'
+        - $ref: '#/components/parameters/ReportTo'
+      responses:
+        '200':
+          description: Tỷ lệ hủy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateReport'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /reports/drivers:
+    get:
+      tags: [Reports]
+      summary: Báo cáo hiệu quả hoạt động tài xế
+      description: Đáp ứng BR10, FR65, AC16.
+      operationId: reportDrivers
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ReportFrom'
+        - $ref: '#/components/parameters/ReportTo'
+      responses:
+        '200':
+          description: Báo cáo hiệu quả tài xế
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverPerformanceReport'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "Nhập JWT access token. Ví dụ: Bearer eyJhbGciOi..."
+
+  parameters:
+    RideId:
+      name: rideId
+      in: path
+      required: true
+      schema:
+        type: string
+      example: RIDE001
+
+    DriverId:
+      name: driverId
+      in: path
+      required: true
+      schema:
+        type: string
+      example: DRV001
+
+    VehicleId:
+      name: vehicleId
+      in: path
+      required: true
+      schema:
+        type: string
+      example: VEH001
+
+    PaymentId:
+      name: paymentId
+      in: path
+      required: true
+      schema:
+        type: string
+      example: PAY001
+
+    NotificationId:
+      name: notificationId
+      in: path
+      required: true
+      schema:
+        type: string
+      example: NOTI001
+
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+
+    PageSize:
+      name: pageSize
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+    ReportFrom:
+      name: from
+      in: query
+      required: true
+      schema:
+        type: string
+        format: date
+      example: '2026-09-01'
+
+    ReportTo:
+      name: to
+      in: query
+      required: true
+      schema:
+        type: string
+        format: date
+      example: '2026-09-30'
+
+  responses:
+    BadRequest:
+      description: Dữ liệu đầu vào không hợp lệ
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Unauthorized:
+      description: Chưa đăng nhập hoặc JWT không hợp lệ
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Forbidden:
+      description: Người dùng không có quyền thực hiện thao tác
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFound:
+      description: Không tìm thấy tài nguyên
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  schemas:
+
+    Role:
+      type: string
+      enum: [CUSTOMER, DRIVER, STAFF, ADMIN]
+
+    ServiceType:
+      type: string
+      enum: [MOTORBIKE, CAR_4, CAR_7]
+
+    DriverAvailability:
+      type: string
+      enum: [OFFLINE, ONLINE, AVAILABLE, BUSY]
+
+    RideStatus:
+      type: string
+      enum:
+        - SEARCHING_DRIVER
+        - DRIVER_ASSIGNED
+        - ARRIVED
+        - PICKED_UP
+        - IN_PROGRESS
+        - COMPLETED
+        - CANCELLED
+        - NO_DRIVER_AVAILABLE
+
+    PaymentMethod:
+      type: string
+      enum: [CASH, E_WALLET, CARD]
+
+    PaymentStatus:
+      type: string
+      enum: [PENDING, SUCCESS, FAILED, REFUNDED]
+
+    RegisterRequest:
+      type: object
+      required: [fullName, phone, password]
+      properties:
+        fullName:
+          type: string
+          minLength: 2
+          example: Nguyen Van A
+        phone:
+          type: string
+          example: '0901234567'
+        email:
+          type: string
+          format: email
+          example: a@example.com
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: Password@123
+
+    LoginRequest:
+      type: object
+      required: [phone, password]
+      properties:
+        phone:
+          type: string
+          example: '0901234567'
+        password:
+          type: string
+          format: password
+          example: Password@123
+
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIs...
+        tokenType:
+          type: string
+          example: Bearer
+        expiresIn:
+          type: integer
+          example: 3600
+        user:
+          $ref: '#/components/schemas/User'
+
+    User:
+      type: object
+      properties:
+        userId:
+          type: string
+          example: USR001
+        fullName:
+          type: string
+          example: Nguyen Van A
+        phone:
+          type: string
+          example: '0901234567'
+        email:
+          type: string
+          format: email
+          example: a@example.com
+        role:
+          $ref: '#/components/schemas/Role'
+        verified:
+          type: boolean
+          example: true
+
+    Customer:
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          properties:
+            totalRides:
+              type: integer
+              example: 15
+
+    UpdateCustomerRequest:
+      type: object
+      properties:
+        fullName:
+          type: string
+          example: Nguyen Van A
+        email:
+          type: string
+          format: email
+          example: new@example.com
+
+    Location:
+      type: object
+      required: [latitude, longitude]
+      properties:
+        latitude:
+          type: number
+          format: double
+          example: 10.7769
+        longitude:
+          type: number
+          format: double
+          example: 106.7009
+        address:
+          type: string
+          example: Quận 1, TP.HCM
+
+    RideRequest:
+      type: object
+      required: [pickup, destination, serviceType]
+      properties:
+        pickup:
+          $ref: '#/components/schemas/Location'
+        destination:
+          $ref: '#/components/schemas/Location'
+        serviceType:
+          $ref: '#/components/schemas/ServiceType'
+
+    RideEstimate:
+      type: object
+      properties:
+        distanceKm:
+          type: number
+          format: double
+          example: 8.5
+        estimatedDurationMinutes:
+          type: integer
+          example: 25
+        estimatedFare:
+          type: number
+          format: double
+          example: 85000
+
+    Ride:
+      type: object
+      properties:
+        rideId:
+          type: string
+          example: RIDE001
+        customerId:
+          type: string
+          example: USR001
+        driver:
+          nullable: true
+          $ref: '#/components/schemas/DriverSummary'
+        pickup:
+          $ref: '#/components/schemas/Location'
+        destination:
+          $ref: '#/components/schemas/Location'
+        serviceType:
+          $ref: '#/components/schemas/ServiceType'
+        status:
+          $ref: '#/components/schemas/RideStatus'
+        etaMinutes:
+          type: integer
+          nullable: true
+          example: 5
+        fare:
+          type: number
+          format: double
+          nullable: true
+          example: 85000
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    DriverSummary:
+      type: object
+      properties:
+        driverId:
+          type: string
+          example: DRV001
+        fullName:
+          type: string
+          example: Tran Van B
+        phone:
+          type: string
+          example: '0909999999'
+        rating:
+          type: number
+          format: float
+          example: 4.8
+        vehicle:
+          $ref: '#/components/schemas/VehicleSummary'
+
+    Driver:
+      type: object
+      properties:
+        driverId:
+          type: string
+          example: DRV001
+        userId:
+          type: string
+          example: USR100
+        fullName:
+          type: string
+          example: Tran Van B
+        phone:
+          type: string
+          example: '0909999999'
+        rating:
+          type: number
+          format: float
+          example: 4.8
+        availability:
+          $ref: '#/components/schemas/DriverAvailability'
+        location:
+          $ref: '#/components/schemas/Location'
+        vehicle:
+          $ref: '#/components/schemas/Vehicle'
+
+    CreateDriverRequest:
+      type: object
+      required: [fullName, phone]
+      properties:
+        fullName:
+          type: string
+          example: Tran Van B
+        phone:
+          type: string
+          example: '0909999999'
+        email:
+          type: string
+          format: email
+
+    UpdateDriverRequest:
+      type: object
+      properties:
+        fullName:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          format: email
+
+    AdminUpdateDriverRequest:
+      allOf:
+        - $ref: '#/components/schemas/UpdateDriverRequest'
+        - type: object
+          properties:
+            availability:
+              $ref: '#/components/schemas/DriverAvailability'
+
+    DriverStatusRequest:
+      type: object
+      required: [availability]
+      properties:
+        availability:
+          $ref: '#/components/schemas/DriverAvailability'
+
+    Vehicle:
+      type: object
+      properties:
+        vehicleId:
+          type: string
+          example: VEH001
+        driverId:
+          type: string
+          example: DRV001
+        type:
+          $ref: '#/components/schemas/ServiceType'
+        brand:
+          type: string
+          example: Toyota
+        model:
+          type: string
+          example: Vios
+        licensePlate:
+          type: string
+          example: 51A-123.45
+        verified:
+          type: boolean
+          example: true
+
+    VehicleSummary:
+      type: object
+      properties:
+        vehicleId:
+          type: string
+          example: VEH001
+        type:
+          $ref: '#/components/schemas/ServiceType'
+        licensePlate:
+          type: string
+          example: 51A-123.45
+
+    UpdateVehicleRequest:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/ServiceType'
+        brand:
+          type: string
+        model:
+          type: string
+        licensePlate:
+          type: string
+
+    AdminUpdateVehicleRequest:
+      allOf:
+        - $ref: '#/components/schemas/UpdateVehicleRequest'
+        - type: object
+          properties:
+            verified:
+              type: boolean
+
+    MatchingStatus:
+      type: object
+      properties:
+        rideId:
+          type: string
+          example: RIDE001
+        status:
+          type: string
+          enum:
+            - SEARCHING
+            - DRIVER_CONTACTED
+            - DRIVER_ASSIGNED
+            - SEARCHING_NEXT_DRIVER
+            - NO_DRIVER_AVAILABLE
+        currentDriver:
+          nullable: true
+          $ref: '#/components/schemas/DriverSummary'
+        attempt:
+          type: integer
+          example: 2
+        message:
+          type: string
+          example: Đang tìm tài xế phù hợp gần bạn.
+
+    UpdateRideStatusRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ARRIVED, PICKED_UP, IN_PROGRESS, COMPLETED]
+
+    CancelRideRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+          example: Khách hàng thay đổi kế hoạch
+
+    Fare:
+      type: object
+      properties:
+        rideId:
+          type: string
+          example: RIDE001
+        serviceType:
+          $ref: '#/components/schemas/ServiceType'
+        distanceKm:
+          type: number
+          format: double
+          example: 8.5
+        durationMinutes:
+          type: integer
+          example: 25
+        baseFare:
+          type: number
+          format: double
+          example: 12000
+        distanceFare:
+          type: number
+          format: double
+          example: 60000
+        otherFee:
+          type: number
+          format: double
+          example: 13000
+        total:
+          type: number
+          format: double
+          example: 85000
+        currency:
+          type: string
+          example: VND
+
+    CreatePaymentRequest:
+      type: object
+      required: [rideId, method]
+      properties:
+        rideId:
+          type: string
+          example: RIDE001
+        method:
+          $ref: '#/components/schemas/PaymentMethod'
+        paymentToken:
+          type: string
+          nullable: true
+          description: Token/reference từ payment provider. Không phải số thẻ hoặc CVV.
+          example: provider-token-123
+
+    Payment:
+      type: object
+      properties:
+        paymentId:
+          type: string
+          example: PAY001
+        rideId:
+          type: string
+          example: RIDE001
+        amount:
+          type: number
+          format: double
+          example: 85000
+        method:
+          $ref: '#/components/schemas/PaymentMethod'
+        status:
+          $ref: '#/components/schemas/PaymentStatus'
+        transactionId:
+          type: string
+          nullable: true
+          example: TXN123456
+        failureReason:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    Notification:
+      type: object
+      properties:
+        notificationId:
+          type: string
+          example: NOTI001
+        type:
+          type: string
+          enum:
+            - RIDE_ACCEPTED
+            - DRIVER_ARRIVED
+            - RIDE_COMPLETED
+            - PAYMENT_RESULT
+            - RIDE_REQUEST
+            - RIDE_UPDATED
+        title:
+          type: string
+          example: Tài xế đã nhận chuyến
+        message:
+          type: string
+          example: Tài xế Trần Văn B đã nhận chuyến của bạn.
+        read:
+          type: boolean
+          example: false
+        createdAt:
+          type: string
+          format: date-time
+
+    SupportRideRequest:
+      type: object
+      required: [note]
+      properties:
+        note:
+          type: string
+          example: Tài xế báo không thể cập nhật trạng thái chuyến.
+
+    AuditLog:
+      type: object
+      properties:
+        logId:
+          type: string
+          example: LOG001
+        actorId:
+          type: string
+          example: STAFF001
+        actorRole:
+          $ref: '#/components/schemas/Role'
+        action:
+          type: string
+          example: UPDATE_DRIVER
+        resourceType:
+          type: string
+          example: DRIVER
+        resourceId:
+          type: string
+          example: DRV001
+        timestamp:
+          type: string
+          format: date-time
+        result:
+          type: string
+          enum: [SUCCESS, FAILED]
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        pageSize:
+          type: integer
+          example: 20
+        total:
+          type: integer
+          example: 100
+
+    CustomerPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Customer'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    DriverPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Driver'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    VehiclePage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Vehicle'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    RidePage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ride'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    PaymentPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Payment'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    NotificationPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Notification'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    AuditLogPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditLog'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    RideReport:
+      type: object
+      properties:
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+        totalRides:
+          type: integer
+          example: 12500
+        completedRides:
+          type: integer
+          example: 11000
+        cancelledRides:
+          type: integer
+          example: 900
+        otherRides:
+          type: integer
+          example: 600
+
+    RevenueReport:
+      type: object
+      properties:
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+        totalRevenue:
+          type: number
+          format: double
+          example: 1250000000
+        currency:
+          type: string
+          example: VND
+
+    RateReport:
+      type: object
+      properties:
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+        totalRides:
+          type: integer
+          example: 12500
+        rate:
+          type: number
+          format: float
+          example: 88.0
+        unit:
+          type: string
+          example: percent
+
+    DriverPerformanceReport:
+      type: object
+      properties:
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+        drivers:
+          type: array
+          items:
+            type: object
+            properties:
+              driverId:
+                type: string
+                example: DRV001
+              completedRides:
+                type: integer
+                example: 180
+              acceptedRides:
+                type: integer
+                example: 200
+              cancelledRides:
+                type: integer
+                example: 5
+              acceptanceRate:
+                type: number
+                format: float
+                example: 90.0
+              completionRate:
+                type: number
+                format: float
+                example: 97.2
+              rating:
+                type: number
+                format: float
+                example: 4.8
+
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          example: INVALID_REQUEST
+        message:
+          type: string
+          example: Dữ liệu yêu cầu không hợp lệ.
+        timestamp:
+          type: string
+          format: date-time
