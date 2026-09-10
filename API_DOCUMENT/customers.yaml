@@ -1,0 +1,59 @@
+#Quản lý khách hàng
+openapi: 3.0.3
+
+info:
+  title: CAB System API - Customers
+  description: APIs for customer profile, location and trip history
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000/api/v1
+
+tags:
+  - name: Customers
+    description: APIs for customer profile, location and trip history
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+paths:
+  /customers/me:
+    get:
+      tags: [Customers]
+      summary: Get current customer profile
+      security: [{bearerAuth: []}]
+      responses:
+        '200': {description: Customer profile}
+    put:
+      tags: [Customers]
+      summary: Update customer profile
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              name: Nguyen Van B
+              email: b@example.com
+      responses:
+        '200': {description: Profile updated}
+
+  /customers/me/location:
+    get:
+      tags: [Customers]
+      summary: Get current customer location
+      security: [{bearerAuth: []}]
+      responses:
+        '200': {description: Current customer location}
+
+  /customers/me/trips:
+    get:
+      tags: [Customers]
+      summary: Get customer trip history
+      security: [{bearerAuth: []}]
+      responses:
+        '200': {description: Trip history}
