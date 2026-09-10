@@ -1,0 +1,34 @@
+# Nhật kí hoạt động
+openapi: 3.0.3
+
+info:
+  title: CAB System API - Audit
+  description: APIs for important administrative audit logs
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000/api/v1
+
+tags:
+  - name: Audit
+    description: APIs for important administrative audit logs
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+paths:
+  /audit-logs:
+    get:
+      tags: [Audit]
+      summary: Search administrative audit logs
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: from, in: query, schema: {type: string, format: date-time}}
+        - {name: to, in: query, schema: {type: string, format: date-time}}
+      responses:
+        '200': {description: Audit log list}
+        '403': {description: Forbidden}
