@@ -1,0 +1,103 @@
+#Tính cước, thanh toán
+openapi: 3.0.3
+
+info:
+  title: CAB System API - Payments
+  description: APIs for fare calculation and payment processing
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000/api/v1
+
+tags:
+  - name: Payments
+    description: APIs for fare calculation and payment processing
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+paths:
+  /payments/calculate-fare:
+    post:
+      tags: [Payments]
+      summary: Calculate final fare
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              tripId: TRIP001
+      responses:
+        '200': {description: Fare calculated}
+
+  /payments:
+    post:
+      tags: [Payments]
+      summary: Create electronic payment
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              tripId: TRIP001
+              method: E_WALLET
+              providerToken: token-from-provider
+      responses:
+        '201': {description: Payment created}
+        '400': {description: Payment failed}
+
+  /payments/cash:
+    post:
+      tags: [Payments]
+      summary: Record cash payment
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              tripId: TRIP001
+              amount: 120000
+      responses:
+        '201': {description: Cash payment recorded}
+
+  /payments/{paymentId}:
+    get:
+      tags: [Payments]
+      summary: Get payment result
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: paymentId, in: path, required: true, schema: {type: string}}
+      responses:
+        '200': {description: Payment information}
+
+  /payments/{paymentId}/retry:
+    post:
+      tags: [Payments]
+      summary: Retry failed payment
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: paymentId, in: path, required: true, schema: {type: string}}
+      responses:
+        '200': {description: Payment retry started}
+        '409': {description: Retry not allowed}
+
+  /payment-methods:
+    get:
+      tags: [Payments]
+      summary: List payment methods
+      security: [{bearerAuth: []}]
+      responses:
+        '200': {description: Payment method list}
+    post:
+      tags: [Payments]
+      summary: Add payment method
+      security: [{bearerAuth: []}]
+      responses:
+        '201': {description: Payment method created}
