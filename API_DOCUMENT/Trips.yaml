@@ -1,1 +1,134 @@
+#Đặt và quản lý chuyến
+openapi: 3.0.3
 
+info:
+  title: CAB System API - Trips
+  description: APIs for booking and tracking trips
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000/api/v1
+
+tags:
+  - name: Trips
+    description: APIs for booking and tracking trips
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+paths:
+  /trips/estimate:
+    post:
+      tags: [Trips]
+      summary: Estimate trip information
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              pickup: "Ben Thanh Market"
+              destination: "Tan Son Nhat Airport"
+              serviceType: CAR_4
+      responses:
+        '200': {description: Estimated distance, duration and fare}
+
+  /trips:
+    post:
+      tags: [Trips]
+      summary: Create ride booking request
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              pickup: "Ben Thanh Market"
+              destination: "Tan Son Nhat Airport"
+              serviceType: CAR_4
+      responses:
+        '201': {description: Trip created and driver search started}
+    get:
+      tags: [Trips]
+      summary: List current user's trips
+      security: [{bearerAuth: []}]
+      responses:
+        '200': {description: Trip list}
+
+  /trips/{tripId}:
+    get:
+      tags: [Trips]
+      summary: Get trip details and status
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: tripId, in: path, required: true, schema: {type: string}}
+      responses:
+        '200': {description: Trip details}
+        '404': {description: Trip not found}
+
+  /trips/{tripId}/status:
+    patch:
+      tags: [Trips]
+      summary: Update trip status
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: tripId, in: path, required: true, schema: {type: string}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              status: IN_PROGRESS
+      responses:
+        '200': {description: Status updated}
+        '400': {description: Invalid status transition}
+
+  /trips/{tripId}/cancel:
+    post:
+      tags: [Trips]
+      summary: Cancel trip
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: tripId, in: path, required: true, schema: {type: string}}
+      requestBody:
+        content:
+          application/json:
+            example:
+              reason: Customer changed plan
+      responses:
+        '200': {description: Trip cancelled}
+        '400': {description: Cancellation not allowed}
+
+  /trips/{tripId}/driver:
+    get:
+      tags: [Trips]
+      summary: Get assigned driver
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: tripId, in: path, required: true, schema: {type: string}}
+      responses:
+        '200': {description: Driver information}
+
+  /trips/{tripId}/eta:
+    get:
+      tags: [Trips]
+      summary: Get driver ETA
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: tripId, in: path, required: true, schema: {type: string}}
+      responses:
+        '200': {description: Estimated arrival time}
+
+  /trips/{tripId}/driver-location:
+    get:
+      tags: [Trips]
+      summary: Get current driver location
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: tripId, in: path, required: true, schema: {type: string}}
+      responses:
+        '200': {description: Driver location}
