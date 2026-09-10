@@ -1,0 +1,79 @@
+# Đăng ký, đăng nhập, đăng xuất, xác thực
+openapi: 3.0.3
+
+info:
+  title: CAB System API - Authentication
+  description: APIs for customer authentication and account verification
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000/api/v1
+
+tags:
+  - name: Authentication
+    description: APIs for customer authentication and account verification
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+paths:
+  /auth/register:
+    post:
+      tags: [Authentication]
+      summary: Register customer
+      operationId: registerCustomer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              name: Nguyen Van A
+              phone: "0901234567"
+              email: a@example.com
+              password: Password123!
+      responses:
+        '201': {description: Register successfully}
+        '400': {description: Invalid request}
+
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: Login
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              phone: "0901234567"
+              password: Password123!
+      responses:
+        '200': {description: Login successfully}
+        '401': {description: Invalid credentials}
+
+  /auth/logout:
+    post:
+      tags: [Authentication]
+      summary: Logout
+      security: [{bearerAuth: []}]
+      responses:
+        '204': {description: Logout successfully}
+
+  /auth/verify:
+    post:
+      tags: [Authentication]
+      summary: Verify customer account
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              otp: "123456"
+      responses:
+        '200': {description: Account verified}
+        '400': {description: Invalid OTP}
