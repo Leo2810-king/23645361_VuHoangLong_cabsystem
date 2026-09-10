@@ -1,0 +1,124 @@
+#Quản lý tài xế
+openapi: 3.0.3
+
+info:
+  title: CAB System API - Drivers
+  description: APIs for driver profile, availability and location
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000/api/v1
+
+tags:
+  - name: Drivers
+    description: APIs for driver profile, availability and location
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+paths:
+  /drivers:
+    post:
+      tags: [Drivers]
+      summary: Create driver account
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              name: Tran Van B
+              phone: "0912345678"
+      responses:
+        '201': {description: Driver created}
+
+  /drivers/me:
+    get:
+      tags: [Drivers]
+      summary: Get driver profile
+      security: [{bearerAuth: []}]
+      responses:
+        '200': {description: Driver profile}
+    put:
+      tags: [Drivers]
+      summary: Update driver profile
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              name: Tran Van C
+              phone: "0912345678"
+      responses:
+        '200': {description: Driver profile updated}
+
+  /drivers/me/status:
+    patch:
+      tags: [Drivers]
+      summary: Set driver online or offline
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              status: ONLINE
+      responses:
+        '200': {description: Driver status updated}
+
+  /drivers/me/availability:
+    patch:
+      tags: [Drivers]
+      summary: Set driver availability
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              available: true
+      responses:
+        '200': {description: Driver availability updated}
+
+  /drivers/me/location:
+    post:
+      tags: [Drivers]
+      summary: Update driver location
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              latitude: 10.7769
+              longitude: 106.7009
+      responses:
+        '200': {description: Location updated}
+
+  /drivers/available:
+    get:
+      tags: [Drivers]
+      summary: Find available drivers
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: serviceType, in: query, schema: {type: string}}
+        - {name: latitude, in: query, schema: {type: number, format: double}}
+        - {name: longitude, in: query, schema: {type: number, format: double}}
+        - {name: radiusKm, in: query, schema: {type: number, format: double, default: 5}}
+      responses:
+        '200': {description: Available drivers}
+
+  /drivers/{driverId}:
+    get:
+      tags: [Drivers]
+      summary: Get driver information
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: driverId, in: path, required: true, schema: {type: string}}
+      responses:
+        '200': {description: Driver information}
