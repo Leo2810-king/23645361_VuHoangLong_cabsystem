@@ -1,0 +1,68 @@
+#Báo cáo
+openapi: 3.0.3
+
+info:
+  title: CAB System API - Reports
+  description: APIs for operational and business reports
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000/api/v1
+
+tags:
+  - name: Reports
+    description: APIs for operational and business reports
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+paths:
+  /reports/trips:
+    get:
+      tags: [Reports]
+      summary: Trip count report
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: from, in: query, required: true, schema: {type: string, format: date}}
+        - {name: to, in: query, required: true, schema: {type: string, format: date}}
+      responses:
+        '200': {description: Trip count report}
+
+  /reports/revenue:
+    get:
+      tags: [Reports]
+      summary: Revenue report
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: from, in: query, required: true, schema: {type: string, format: date}}
+        - {name: to, in: query, required: true, schema: {type: string, format: date}}
+      responses:
+        '200': {description: Revenue report}
+
+  /reports/completion-rate:
+    get:
+      tags: [Reports]
+      summary: Trip completion rate report
+      security: [{bearerAuth: []}]
+      responses:
+        '200': {description: Completion rate report}
+
+  /reports/cancellation-rate:
+    get:
+      tags: [Reports]
+      summary: Trip cancellation rate report
+      security: [{bearerAuth: []}]
+      responses:
+        '200': {description: Cancellation rate report}
+
+  /reports/driver-performance:
+    get:
+      tags: [Reports]
+      summary: Driver performance report
+      security: [{bearerAuth: []}]
+      responses:
+        '200': {description: Driver performance report}
