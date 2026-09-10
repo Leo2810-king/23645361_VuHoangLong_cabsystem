@@ -1,0 +1,59 @@
+#Ghép tài xế với chuyến
+openapi: 3.0.3
+
+info:
+  title: CAB System API - Matching
+  description: APIs for matching trips with suitable drivers
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000/api/v1
+
+tags:
+  - name: Matching
+    description: APIs for matching trips with suitable drivers
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+paths:
+  /matching/{tripId}/request:
+    post:
+      tags: [Matching]
+      summary: Start or continue driver matching
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: tripId, in: path, required: true, schema: {type: string}}
+      responses:
+        '200': {description: Driver matching started}
+        '404': {description: No suitable driver found}
+
+  /trips/{tripId}/accept:
+    post:
+      tags: [Matching]
+      summary: Driver accepts trip
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: tripId, in: path, required: true, schema: {type: string}}
+      responses:
+        '200': {description: Trip accepted}
+        '409': {description: Trip no longer available}
+
+  /trips/{tripId}/reject:
+    post:
+      tags: [Matching]
+      summary: Driver rejects trip
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: tripId, in: path, required: true, schema: {type: string}}
+      requestBody:
+        content:
+          application/json:
+            example:
+              reason: Too far
+      responses:
+        '200': {description: Trip rejected and matching continues}
