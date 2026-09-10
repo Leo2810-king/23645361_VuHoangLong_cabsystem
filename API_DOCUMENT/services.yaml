@@ -1,0 +1,61 @@
+#Loại dịch vụ
+openapi: 3.0.3
+
+info:
+  title: CAB System API - Services
+  description: APIs for extending ride service types
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000/api/v1
+
+tags:
+  - name: Services
+    description: APIs for extending ride service types
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+paths:
+  /services:
+    get:
+      tags: [Services]
+      summary: List service types
+      responses:
+        '200': {description: Service list}
+
+    post:
+      tags: [Services]
+      summary: Add service type
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              code: CAR_7
+              name: Car 7 seats
+              status: ACTIVE
+      responses:
+        '201': {description: Service created}
+
+  /services/{serviceId}:
+    put:
+      tags: [Services]
+      summary: Update service type
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: serviceId, in: path, required: true, schema: {type: string}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              name: Car 7 seats
+              status: ACTIVE
+      responses:
+        '200': {description: Service updated}
