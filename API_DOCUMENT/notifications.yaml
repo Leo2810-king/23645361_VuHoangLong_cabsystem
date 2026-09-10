@@ -1,0 +1,46 @@
+#Thông báo
+openapi: 3.0.3
+
+info:
+  title: CAB System API - Notifications
+  description: APIs for trip and payment notifications
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000/api/v1
+
+tags:
+  - name: Notifications
+    description: APIs for trip and payment notifications
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+paths:
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: Get user notifications
+      security: [{bearerAuth: []}]
+      responses:
+        '200': {description: Notification list}
+
+    post:
+      tags: [Notifications]
+      summary: Create or send notification
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              userId: CUS001
+              type: DRIVER_ASSIGNED
+              message: Driver has accepted your trip.
+              channel: PUSH
+      responses:
+        '201': {description: Notification created}
