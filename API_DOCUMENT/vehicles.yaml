@@ -1,0 +1,62 @@
+#Quản lý phương tiện
+openapi: 3.0.3
+
+info:
+  title: CAB System API - Vehicles
+  description: APIs for driver vehicle management
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000/api/v1
+
+tags:
+  - name: Vehicles
+    description: APIs for driver vehicle management
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+paths:
+  /drivers/me/vehicles:
+    get:
+      tags: [Vehicles]
+      summary: Get driver's vehicles
+      security: [{bearerAuth: []}]
+      responses:
+        '200': {description: Vehicle list}
+    post:
+      tags: [Vehicles]
+      summary: Add driver vehicle
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              plateNumber: "51A-12345"
+              type: CAR_4
+              brand: Toyota
+              model: Vios
+      responses:
+        '201': {description: Vehicle created}
+
+  /drivers/me/vehicles/{vehicleId}:
+    put:
+      tags: [Vehicles]
+      summary: Update vehicle information
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: vehicleId, in: path, required: true, schema: {type: string}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              plateNumber: "51A-12345"
+              type: CAR_4
+      responses:
+        '200': {description: Vehicle updated}
