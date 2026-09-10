@@ -1,0 +1,24 @@
+# User Login
+
+| Test Case ID | Test Scenario | Test Case | Preconditions | Test Steps | Test Data | Expected Result | Priority |
+|---|---|---|---|---|---|---|---|
+| TC-UL-001 | User Login | Đăng nhập/Thao tác hợp lệ | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Valid data` | Thực hiện thành công | High |
+| TC-UL-002 | User Login | Username không tồn tại | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Unknown user` | Thông báo không hợp lệ | High |
+| TC-UL-003 | User Login | Sai mật khẩu | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Wrong password` | Đăng nhập thất bại | High |
+| TC-UL-004 | User Login | Bỏ trống trường bắt buộc | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Empty field` | Hiển thị Required | High |
+| TC-UL-005 | User Login | Bỏ trống toàn bộ | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `All empty` | Hiển thị validation | High |
+| TC-UL-006 | User Login | Dữ liệu sai định dạng | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Invalid format` | Từ chối dữ liệu | Medium |
+| TC-UL-007 | User Login | Vượt giới hạn ký tự | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `256 chars` | Hiển thị lỗi độ dài | Medium |
+| TC-UL-008 | User Login | Giá trị tối thiểu | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Min value` | Xử lý đúng giá trị biên | Medium |
+| TC-UL-009 | User Login | Giá trị tối đa | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Max value` | Xử lý đúng giá trị biên | Medium |
+| TC-UL-010 | User Login | Ký tự đặc biệt | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `@#$%^` | Không làm lỗi hệ thống | Medium |
+| TC-UL-011 | User Login | SQL Injection | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `' OR 1=1 --` | Không bị SQL Injection | High |
+| TC-UL-012 | User Login | XSS Script | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `<script>alert(1)</script>` | Escape dữ liệu | High |
+| TC-UL-013 | User Login | Session hết hạn | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Expired session` | Yêu cầu đăng nhập lại | Medium |
+| TC-UL-014 | User Login | Mất kết nối mạng | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Network off` | Thông báo lỗi mạng | Medium |
+| TC-UL-015 | User Login | Thao tác đồng thời | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Concurrent` | Chỉ một giao dịch thành công | High |
+| TC-UL-016 | User Login | Dữ liệu trùng lặp | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Duplicate` | Không tạo dữ liệu trùng | High |
+| TC-UL-017 | User Login | Không có quyền | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Guest role` | Từ chối truy cập | High |
+| TC-UL-018 | User Login | Business Rule | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Boundary data` | Đúng quy tắc nghiệp vụ | High |
+
+**Total Test Cases:** 18

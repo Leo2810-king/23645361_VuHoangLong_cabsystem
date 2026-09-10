@@ -1,0 +1,24 @@
+# Complete Trip
+
+| Test Case ID | Test Scenario | Test Case | Preconditions | Test Steps | Test Data | Expected Result | Priority |
+|---|---|---|---|---|---|---|---|
+| TC-CT-001 | Complete Trip | Đăng nhập/Thao tác hợp lệ | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Valid data` | Thực hiện thành công | High |
+| TC-CT-002 | Complete Trip | Username không tồn tại | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Unknown user` | Thông báo không hợp lệ | High |
+| TC-CT-003 | Complete Trip | Sai mật khẩu | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Wrong password` | Đăng nhập thất bại | High |
+| TC-CT-004 | Complete Trip | Bỏ trống trường bắt buộc | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Empty field` | Hiển thị Required | High |
+| TC-CT-005 | Complete Trip | Bỏ trống toàn bộ | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `All empty` | Hiển thị validation | High |
+| TC-CT-006 | Complete Trip | Dữ liệu sai định dạng | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Invalid format` | Từ chối dữ liệu | Medium |
+| TC-CT-007 | Complete Trip | Vượt giới hạn ký tự | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `256 chars` | Hiển thị lỗi độ dài | Medium |
+| TC-CT-008 | Complete Trip | Giá trị tối thiểu | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Min value` | Xử lý đúng giá trị biên | Medium |
+| TC-CT-009 | Complete Trip | Giá trị tối đa | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Max value` | Xử lý đúng giá trị biên | Medium |
+| TC-CT-010 | Complete Trip | Ký tự đặc biệt | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `@#$%^` | Không làm lỗi hệ thống | Medium |
+| TC-CT-011 | Complete Trip | SQL Injection | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `' OR 1=1 --` | Không bị SQL Injection | High |
+| TC-CT-012 | Complete Trip | XSS Script | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `<script>alert(1)</script>` | Escape dữ liệu | High |
+| TC-CT-013 | Complete Trip | Session hết hạn | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Expired session` | Yêu cầu đăng nhập lại | Medium |
+| TC-CT-014 | Complete Trip | Mất kết nối mạng | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Network off` | Thông báo lỗi mạng | Medium |
+| TC-CT-015 | Complete Trip | Thao tác đồng thời | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Concurrent` | Chỉ một giao dịch thành công | High |
+| TC-CT-016 | Complete Trip | Dữ liệu trùng lặp | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Duplicate` | Không tạo dữ liệu trùng | High |
+| TC-CT-017 | Complete Trip | Không có quyền | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Guest role` | Từ chối truy cập | High |
+| TC-CT-018 | Complete Trip | Business Rule | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Boundary data` | Đúng quy tắc nghiệp vụ | High |
+
+**Total Test Cases:** 18

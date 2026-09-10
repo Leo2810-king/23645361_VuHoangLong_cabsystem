@@ -1,0 +1,24 @@
+# Forgot Password
+
+| Test Case ID | Test Scenario | Test Case | Preconditions | Test Steps | Test Data | Expected Result | Priority |
+|---|---|---|---|---|---|---|---|
+| TC-FP-001 | Forgot Password | Đăng nhập/Thao tác hợp lệ | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Valid data` | Thực hiện thành công | High |
+| TC-FP-002 | Forgot Password | Username không tồn tại | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Unknown user` | Thông báo không hợp lệ | High |
+| TC-FP-003 | Forgot Password | Sai mật khẩu | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Wrong password` | Đăng nhập thất bại | High |
+| TC-FP-004 | Forgot Password | Bỏ trống trường bắt buộc | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Empty field` | Hiển thị Required | High |
+| TC-FP-005 | Forgot Password | Bỏ trống toàn bộ | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `All empty` | Hiển thị validation | High |
+| TC-FP-006 | Forgot Password | Dữ liệu sai định dạng | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Invalid format` | Từ chối dữ liệu | Medium |
+| TC-FP-007 | Forgot Password | Vượt giới hạn ký tự | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `256 chars` | Hiển thị lỗi độ dài | Medium |
+| TC-FP-008 | Forgot Password | Giá trị tối thiểu | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Min value` | Xử lý đúng giá trị biên | Medium |
+| TC-FP-009 | Forgot Password | Giá trị tối đa | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Max value` | Xử lý đúng giá trị biên | Medium |
+| TC-FP-010 | Forgot Password | Ký tự đặc biệt | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `@#$%^` | Không làm lỗi hệ thống | Medium |
+| TC-FP-011 | Forgot Password | SQL Injection | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `' OR 1=1 --` | Không bị SQL Injection | High |
+| TC-FP-012 | Forgot Password | XSS Script | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `<script>alert(1)</script>` | Escape dữ liệu | High |
+| TC-FP-013 | Forgot Password | Session hết hạn | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Expired session` | Yêu cầu đăng nhập lại | Medium |
+| TC-FP-014 | Forgot Password | Mất kết nối mạng | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Network off` | Thông báo lỗi mạng | Medium |
+| TC-FP-015 | Forgot Password | Thao tác đồng thời | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Concurrent` | Chỉ một giao dịch thành công | High |
+| TC-FP-016 | Forgot Password | Dữ liệu trùng lặp | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Duplicate` | Không tạo dữ liệu trùng | High |
+| TC-FP-017 | Forgot Password | Không có quyền | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Guest role` | Từ chối truy cập | High |
+| TC-FP-018 | Forgot Password | Business Rule | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Boundary data` | Đúng quy tắc nghiệp vụ | High |
+
+**Total Test Cases:** 18

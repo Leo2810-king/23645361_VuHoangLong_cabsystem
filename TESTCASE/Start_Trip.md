@@ -1,0 +1,24 @@
+# Start Trip
+
+| Test Case ID | Test Scenario | Test Case | Preconditions | Test Steps | Test Data | Expected Result | Priority |
+|---|---|---|---|---|---|---|---|
+| TC-ST-001 | Start Trip | Đăng nhập/Thao tác hợp lệ | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Valid data` | Thực hiện thành công | High |
+| TC-ST-002 | Start Trip | Username không tồn tại | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Unknown user` | Thông báo không hợp lệ | High |
+| TC-ST-003 | Start Trip | Sai mật khẩu | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Wrong password` | Đăng nhập thất bại | High |
+| TC-ST-004 | Start Trip | Bỏ trống trường bắt buộc | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Empty field` | Hiển thị Required | High |
+| TC-ST-005 | Start Trip | Bỏ trống toàn bộ | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `All empty` | Hiển thị validation | High |
+| TC-ST-006 | Start Trip | Dữ liệu sai định dạng | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Invalid format` | Từ chối dữ liệu | Medium |
+| TC-ST-007 | Start Trip | Vượt giới hạn ký tự | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `256 chars` | Hiển thị lỗi độ dài | Medium |
+| TC-ST-008 | Start Trip | Giá trị tối thiểu | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Min value` | Xử lý đúng giá trị biên | Medium |
+| TC-ST-009 | Start Trip | Giá trị tối đa | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Max value` | Xử lý đúng giá trị biên | Medium |
+| TC-ST-010 | Start Trip | Ký tự đặc biệt | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `@#$%^` | Không làm lỗi hệ thống | Medium |
+| TC-ST-011 | Start Trip | SQL Injection | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `' OR 1=1 --` | Không bị SQL Injection | High |
+| TC-ST-012 | Start Trip | XSS Script | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `<script>alert(1)</script>` | Escape dữ liệu | High |
+| TC-ST-013 | Start Trip | Session hết hạn | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Expired session` | Yêu cầu đăng nhập lại | Medium |
+| TC-ST-014 | Start Trip | Mất kết nối mạng | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Network off` | Thông báo lỗi mạng | Medium |
+| TC-ST-015 | Start Trip | Thao tác đồng thời | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Concurrent` | Chỉ một giao dịch thành công | High |
+| TC-ST-016 | Start Trip | Dữ liệu trùng lặp | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Duplicate` | Không tạo dữ liệu trùng | High |
+| TC-ST-017 | Start Trip | Không có quyền | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Guest role` | Từ chối truy cập | High |
+| TC-ST-018 | Start Trip | Business Rule | Hệ thống đang hoạt động và người dùng ở đúng màn hình chức năng | 1. Mở chức năng<br>2. Nhập dữ liệu theo Test Data<br>3. Nhấn nút xác nhận<br>4. Kiểm tra kết quả | `Boundary data` | Đúng quy tắc nghiệp vụ | High |
+
+**Total Test Cases:** 18
